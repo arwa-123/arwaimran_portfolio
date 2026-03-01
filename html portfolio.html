@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arwa Imran | Software Engineer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-blue: #00d4ff;
+            --deep-blue: #0a192f;
+            --electric-blue: #64ffda;
+            --dark-bg: #020c1b;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: #e6f1ff;
+            overflow-x: hidden;
+            cursor: none;
+        }
+        
+        .orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .code-font {
+            font-family: 'Fira Code', monospace;
+        }
+        
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        .glass-panel {
+            background: rgba(10, 25, 47, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 212, 255, 0.1);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5),
+                         0 0 20px rgba(0, 212, 255, 0.3),
+                         0 0 30px rgba(0, 212, 255, 0.1);
+        }
+        
+        .neon-border {
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.3),
+                        inset 0 0 10px rgba(0, 212, 255, 0.1);
+        }
+        
+        .skill-hex {
+            transition: all 0.3s ease;
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        
+        .skill-hex:hover {
+            transform: translateY(-10px) scale(1.1);
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.6));
+        }
+        
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+        
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.1s;
+        }
+        
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon-blue);
+            transition: width 0.3s;
+            box-shadow: 0 0 10px var(--neon-blue);
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .project-card {
+            transition: transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .project-card:hover {
+            transform: scale(1.05) rotateY(5deg);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #00d4ff 0%, #64ffda 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 20px rgba(0, 212, 255, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(0, 212, 255, 0.6); }
+        }
+        
+        .grid-bg {
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+        
+        input, textarea {
+            background: rgba(10, 25, 47, 0.8);
+            border: 1px solid rgba(100, 255, 218, 0.2);
+            color: #e6f1ff;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .section-hidden {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .tech-tag {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            transition: all 0.3s;
+        }
+
+        .tech-tag:hover {
+            background: rgba(0, 212, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .skill-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #64ffda);
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            width: 0;
+            transition: width 1.5s ease-out;
+        }
+    </style>
+</head>
+<body class="grid-bg">
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursor-dot"></div>
+    <div class="cursor-outline" id="cursor-outline"></div>
+
+    <!-- Three.js Canvas -->
+    <div id="canvas-container"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass-panel border-b border-cyan-500/20">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="orbitron text-2xl font-bold gradient-text tracking-wider">ARWA</div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#about" class="nav-link text-sm uppercase tracking-widest hover:text-cyan-400 transition-colors">About</a>
+                <a href="#skills" class="nav-link text-sm uppercase tracking-widest hover:text-cyan-400 transition-colors">Skills</a>
+                <a href="#experience" class="nav-link text-sm uppercase tracking-widest hover:text-cyan-400 transition-colors">Experience</a>
+                <a href="#projects" class="nav-link text-sm uppercase tracking-widest hover:text-cyan-400 transition-colors">Projects</a>
+                <a href="#contact" class="nav-link text-sm uppercase tracking-widest hover:text-cyan-400 transition-colors">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="min-h-screen flex items-center justify-center relative overflow-hidden pt-20">
+        <div class="container mx-auto px-6 text-center relative z-10">
+            <div class="floating">
+                <p class="text-cyan-400 mb-4 tracking-[0.3em] uppercase text-sm">Welcome to my digital space</p>
+                <h1 class="orbitron text-6xl md:text-8xl font-black mb-6 neon-text">
+                    ARWA <span class="text-cyan-400">IMRAN</span>
+                </h1>
+                <div class="h-1 w-32 bg-gradient-to-r from-transparent via-cyan-400 to-transparent mx-auto mb-8"></div>
+                <p class="text-xl md:text-2xl text-gray-300 mb-12 max-w-2xl mx-auto leading-relaxed">
+                    Software Engineer crafting digital experiences with precision and creativity
+                </p>
+                <a href="#about" class="btn-primary inline-block px-8 py-4 rounded-full text-black font-bold tracking-wider uppercase transform hover:scale-105 transition-transform neon-border">
+                    About Me
+                </a>
+            </div>
+        </div>
+        
+        <!-- Floating Elements -->
+        <div class="absolute top-1/4 left-10 w-20 h-20 border border-cyan-500/30 rounded-full animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-10 w-32 h-32 border border-cyan-500/20 rounded-full animate-pulse delay-1000"></div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-24 relative section-hidden">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto glass-panel rounded-2xl p-8 md:p-12 border border-cyan-500/20">
+                <h2 class="orbitron text-4xl font-bold mb-8 gradient-text">About Me</h2>
+                <div class="prose prose-lg text-gray-300 leading-relaxed space-y-4">
+                    <p>
+                        I am <strong class="text-cyan-400">Arwa Imran</strong>, a dedicated Software Engineer with a passion for building robust, scalable, and innovative digital solutions. My journey in technology is driven by an insatiable curiosity and commitment to excellence.
+                    </p>
+                    <p>
+                        With expertise spanning multiple programming languages and development frameworks, I specialize in creating efficient algorithms, designing intuitive user interfaces, and architecting complex systems. My academic background combined with hands-on industry experience has equipped me with a holistic understanding of software development lifecycle.
+                    </p>
+                    <p>
+                        Beyond coding, I bring strong <span class="text-cyan-400">leadership qualities</span> and exceptional <span class="text-cyan-400">technical documentation skills</span> to every project. I believe in writing clean, maintainable code and collaborating effectively within cross-functional teams to deliver impactful solutions.
+                    </p>
+                    <p>
+                        Whether it's developing object-oriented applications, managing databases, or configuring network infrastructures, I approach each challenge with analytical thinking and creative problem-solving abilities.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Skills Section -->
+    <section id="skills" class="py-24 relative section-hidden">
+        <div class="container mx-auto px-6">
+            <h2 class="orbitron text-4xl md:text-5xl font-bold text-center mb-4 gradient-text">Technical Skills</h2>
+            <p class="text-center text-gray-400 mb-16 max-w-2xl mx-auto">Proficient in modern technologies and development methodologies</p>
+            
+            <!-- Programming Languages -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center mr-3 text-sm">&lt;/&gt;</span>
+                    Programming Languages
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- C/C++ -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="code-font text-xl font-bold text-white">C / C++</span>
+                            <span class="text-cyan-400 text-sm">90%</span>
+                        </div>
+                        <div class="skill-bar mb-3">
+                            <div class="skill-progress" data-width="90%"></div>
+                        </div>
+                        <p class="text-sm text-gray-400">System programming, memory management, performance optimization</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span class="tech-tag px-2 py-1 rounded text-xs">STL</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">Pointers</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">File I/O</span>
+                        </div>
+                    </div>
+
+                    <!-- Python -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="code-font text-xl font-bold text-white">Python</span>
+                            <span class="text-cyan-400 text-sm">85%</span>
+                        </div>
+                        <div class="skill-bar mb-3">
+                            <div class="skill-progress" data-width="85%"></div>
+                        </div>
+                        <p class="text-sm text-gray-400">Scripting, automation, data processing, application development</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span class="tech-tag px-2 py-1 rounded text-xs">OOP</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">Libraries</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">APIs</span>
+                        </div>
+                    </div>
+
+                    <!-- JavaScript -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="code-font text-xl font-bold text-white">JavaScript</span>
+                            <span class="text-cyan-400 text-sm">80%</span>
+                        </div>
+                        <div class="skill-bar mb-3">
+                            <div class="skill-progress" data-width="80%"></div>
+                        </div>
+                        <p class="text-sm text-gray-400">Frontend interactivity, DOM manipulation, async programming</p>
+                        <div class="mt-3 flex flex-wrap gap-2">
+                            <span class="tech-tag px-2 py-1 rounded text-xs">ES6+</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">Async/Await</span>
+                            <span class="tech-tag px-2 py-1 rounded text-xs">JSON</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Concepts & Paradigms -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center mr-3 text-sm">⚡</span>
+                    Core Concepts & Paradigms
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- OOP -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h4 class="text-xl font-bold text-white mb-2">Object-Oriented Programming</h4>
+                                <p class="text-gray-400 text-sm mb-3">Class design, inheritance, polymorphism, encapsulation, abstraction</p>
+                                <div class="flex gap-2">
+                                    <span class="tech-tag px-3 py-1 rounded-full text-xs">Classes & Objects</span>
+                                    <span class="tech-tag px-3 py-1 rounded-full text-xs">Design Patterns</span>
+                                </div>
+                            </div>
+                            <div class="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/30">
+                                <span class="text-2xl">🎯</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DSA -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h4 class="text-xl font-bold text-white mb-2">Data Structures & Algorithms</h4>
+                                <p class="text-gray-400 text-sm mb-3">Arrays, linked lists, trees, graphs, sorting, searching, complexity analysis</p>
+                                <div class="flex gap-2">
+                                    <span class="tech-tag px-3 py-1 rounded-full text-xs">Optimization</span>
+                                    <span class="tech-tag px-3 py-1 rounded-full text-xs">Problem Solving</span>
+                                </div>
+                            </div>
+                            <div class="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/30">
+                                <span class="text-2xl">📊</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Web Technologies -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center mr-3 text-sm">🌐</span>
+                    Web Technologies
+                </h3>
+                <div class="glass-panel rounded-xl p-8 border border-cyan-500/20">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                        <div class="text-center group cursor-pointer">
+                            <div class="w-20 h-20 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <span class="code-font text-3xl font-bold text-cyan-400">CSS</span>
+                            </div>
+                            <p class="text-sm text-gray-400">Styling & Layout</p>
+                            <div class="mt-2 flex justify-center gap-1">
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400/30 rounded-full"></span>
+                            </div>
+                        </div>
+
+                        <div class="text-center group cursor-pointer">
+                            <div class="w-20 h-20 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <span class="code-font text-2xl font-bold text-cyan-400">HTML</span>
+                            </div>
+                            <p class="text-sm text-gray-400">Structure & Semantics</p>
+                            <div class="mt-2 flex justify-center gap-1">
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                            </div>
+                        </div>
+
+                        <div class="text-center group cursor-pointer">
+                            <div class="w-20 h-20 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <span class="text-2xl">📱</span>
+                            </div>
+                            <p class="text-sm text-gray-400">Responsive Design</p>
+                            <div class="mt-2 flex justify-center gap-1">
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400/30 rounded-full"></span>
+                            </div>
+                        </div>
+
+                        <div class="text-center group cursor-pointer">
+                            <div class="w-20 h-20 mx-auto mb-3 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <span class="text-2xl">🎨</span>
+                            </div>
+                            <p class="text-sm text-gray-400">UI/UX Principles</p>
+                            <div class="mt-2 flex justify-center gap-1">
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400/30 rounded-full"></span>
+                                <span class="w-2 h-2 bg-cyan-400/30 rounded-full"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Database & Tools -->
+            <div class="mb-16">
+                <h3 class="text-2xl font-bold text-cyan-400 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center mr-3 text-sm">🛠️</span>
+                    Database & Development Tools
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- MySQL -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-4 border border-cyan-500/30 group-hover:scale-110 transition-transform">
+                                <span class="text-2xl">🗄️</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">MySQL</h4>
+                                <p class="text-xs text-cyan-400">Database Management</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Query Optimization</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Database Design</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Normalization</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Joins & Relationships</li>
+                        </ul>
+                    </div>
+
+                    <!-- Cisco Packet Tracer -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-4 border border-cyan-500/30 group-hover:scale-110 transition-transform">
+                                <span class="text-2xl">🌐</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">Cisco Packet Tracer</h4>
+                                <p class="text-xs text-cyan-400">Network Simulation</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Network Topology</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Router Configuration</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Subnetting</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Troubleshooting</li>
+                        </ul>
+                    </div>
+
+                    <!-- MS Office -->
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-all group">
+                        <div class="flex items-center mb-4">
+                            <div class="w-12 h-12 rounded-lg bg-cyan-500/20 flex items-center justify-center mr-4 border border-cyan-500/30 group-hover:scale-110 transition-transform">
+                                <span class="text-2xl">📦</span>
+                            </div>
+                            <div>
+                                <h4 class="text-lg font-bold text-white">Microsoft Office</h4>
+                                <p class="text-xs text-cyan-400">Productivity Suite</p>
+                            </div>
+                        </div>
+                        <ul class="space-y-2 text-sm text-gray-400">
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Excel (Advanced)</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Word (Documentation)</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>PowerPoint</li>
+                            <li class="flex items-center"><span class="w-1.5 h-1.5 bg-cyan-400 rounded-full mr-2"></span>Data Analysis</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Skills -->
+            <div>
+                <h3 class="text-2xl font-bold text-cyan-400 mb-8 flex items-center">
+                    <span class="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center mr-3 text-sm">💼</span>
+                    Professional Competencies
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-panel rounded-lg p-4 text-center border border-cyan-500/20 hover:bg-cyan-500/10 transition-all cursor-pointer group">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">📝</div>
+                        <h4 class="font-bold text-white text-sm">Technical Writing</h4>
+                        <p class="text-xs text-gray-400 mt-1">Documentation & Reports</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-lg p-4 text-center border border-cyan-500/20 hover:bg-cyan-500/10 transition-all cursor-pointer group">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">👥</div>
+                        <h4 class="font-bold text-white text-sm">Leadership</h4>
+                        <p class="text-xs text-gray-400 mt-1">Team Management</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-lg p-4 text-center border border-cyan-500/20 hover:bg-cyan-500/10 transition-all cursor-pointer group">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🧩</div>
+                        <h4 class="font-bold text-white text-sm">Problem Solving</h4>
+                        <p class="text-xs text-gray-400 mt-1">Analytical Thinking</p>
+                    </div>
+                    
+                    <div class="glass-panel rounded-lg p-4 text-center border border-cyan-500/20 hover:bg-cyan-500/10 transition-all cursor-pointer group">
+                        <div class="text-3xl mb-2 group-hover:scale-110 transition-transform">🤝</div>
+                        <h4 class="font-bold text-white text-sm">Collaboration</h4>
+                        <p class="text-xs text-gray-400 mt-1">Cross-functional Teams</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section id="experience" class="py-24 relative section-hidden">
+        <div class="container mx-auto px-6">
+            <h2 class="orbitron text-4xl md:text-5xl font-bold text-center mb-16 gradient-text">Experience & Certifications</h2>
+            
+            <div class="max-w-4xl mx-auto space-y-8">
+                <!-- Internship -->
+                <div class="glass-panel rounded-2xl p-8 border-l-4 border-cyan-400 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="text-2xl font-bold text-white">Software Engineering Intern</h3>
+                            <span class="text-cyan-400 font-mono text-sm mt-2 md:mt-0">Recent</span>
+                        </div>
+                        <h4 class="text-xl text-cyan-400 mb-3">Apexcify Technologies</h4>
+                        <p class="text-gray-400 leading-relaxed">
+                            Completed comprehensive internship gaining hands-on experience in software development, industry best practices, and collaborative project execution. Worked on real-world applications and enhanced technical proficiency in a professional environment.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Certification -->
+                <div class="glass-panel rounded-2xl p-8 border-l-4 border-cyan-400 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <div class="relative z-10">
+                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                            <h3 class="text-2xl font-bold text-white">DLD Exhibition Certification</h3>
+                            <span class="text-cyan-400 font-mono text-sm mt-2 md:mt-0">University</span>
+                        </div>
+                        <h4 class="text-xl text-cyan-400 mb-3">Digital Logic Design</h4>
+                        <p class="text-gray-400 leading-relaxed">
+                            Recognized for exceptional work in Digital Logic Design exhibition at university. Demonstrated practical implementation of logical circuits, digital systems design, and innovative problem-solving approaches in hardware-software integration.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="py-24 relative section-hidden">
+        <div class="container mx-auto px-6">
+            <h2 class="orbitron text-4xl md:text-5xl font-bold text-center mb-16 gradient-text">Featured Projects</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto">
+                <!-- Flight Management System -->
+                <div class="project-card glass-panel rounded-2xl overflow-hidden border border-cyan-500/20">
+                    <div class="h-48 bg-gradient-to-br from-cyan-900/50 to-blue-900/50 flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIgZmlsbD0iIzAwZDRmZiIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+')] opacity-30"></div>
+                        <span class="orbitron text-5xl text-cyan-400/30">✈️</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3 text-white">Flight Management System</h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">C++</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">OOP</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">File Handling</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">
+                            Comprehensive airline reservation system enabling flight booking, passenger management, seat allocation, and schedule tracking with secure data persistence.
+                        </p>
+                        <div class="flex items-center text-cyan-400 text-xs">
+                            <span class="mr-2">●</span> Booking System
+                            <span class="mx-2">●</span> Seat Management
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ATM Machine System -->
+                <div class="project-card glass-panel rounded-2xl overflow-hidden border border-cyan-500/20">
+                    <div class="h-48 bg-gradient-to-br from-cyan-900/50 to-blue-900/50 flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIgZmlsbD0iIzAwZDRmZiIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+')] opacity-30"></div>
+                        <span class="orbitron text-5xl text-cyan-400/30">ATM</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3 text-white">ATM Machine System</h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">OOP</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">C++</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">Python</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">
+                            Banking system simulation implementing OOP principles with account management, secure transactions, balance inquiries, and persistent data storage.
+                        </p>
+                        <div class="flex items-center text-cyan-400 text-xs">
+                            <span class="mr-2">●</span> Secure Auth
+                            <span class="mx-2">●</span> Transactions
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Length Measurement System -->
+                <div class="project-card glass-panel rounded-2xl overflow-hidden border border-cyan-500/20">
+                    <div class="h-48 bg-gradient-to-br from-cyan-900/50 to-blue-900/50 flex items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMiIgZmlsbD0iIzAwZDRmZiIgb3BhY2l0eT0iMC4zIi8+PC9zdmc+')] opacity-30"></div>
+                        <span class="orbitron text-5xl text-cyan-400/30">📏</span>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-3 text-white">Length Measurement System</h3>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">Embedded</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">Sensors</span>
+                            <span class="px-3 py-1 bg-cyan-500/20 text-cyan-400 rounded-full text-xs">IoT</span>
+                        </div>
+                        <p class="text-gray-400 text-sm mb-4">
+                            Automated measurement system using sensor integration for accurate distance calculation, unit conversion, and digital display with calibration features.
+                        </p>
+                        <div class="flex items-center text-cyan-400 text-xs">
+                            <span class="mr-2">●</span> Sensor Integration
+                            <span class="mx-2">●</span> Precision Calc
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-24 relative section-hidden">
+        <div class="container mx-auto px-6">
+            <h2 class="orbitron text-4xl md:text-5xl font-bold text-center mb-16 gradient-text">Get In Touch</h2>
+            
+            <div class="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Contact Info -->
+                <div class="space-y-6">
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl">📱</div>
+                            <div>
+                                <h4 class="text-sm text-gray-400 uppercase tracking-wider">Phone</h4>
+                                <p class="text-white font-mono">+92 XXX XXXXXXX</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl">✉️</div>
+                            <div>
+                                <h4 class="text-sm text-gray-400 uppercase tracking-wider">Email</h4>
+                                <p class="text-white font-mono">arwa.imran@email.com</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-colors cursor-pointer" onclick="window.open('https://github.com/arwaimran', '_blank')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-gray-400 uppercase tracking-wider">GitHub</h4>
+                                <p class="text-white font-mono">github.com/arwaimran</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel rounded-xl p-6 border border-cyan-500/20 hover:border-cyan-400/50 transition-colors cursor-pointer" onclick="window.open('https://linkedin.com/in/arwaimran', '_blank')">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-400 text-xl">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-gray-400 uppercase tracking-wider">LinkedIn</h4>
+                                <p class="text-white font-mono">linkedin.com/in/arwaimran</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Form -->
+                <div class="glass-panel rounded-2xl p-8 border border-cyan-500/20">
+                    <h3 class="text-2xl font-bold mb-6 text-white">Send Message</h3>
+                    <form id="contactForm" class="space-y-6">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 uppercase tracking-wider">Name</label>
+                            <input type="text" required class="w-full px-4 py-3 rounded-lg focus:border-cyan-400 transition-colors" placeholder="Your Name">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 uppercase tracking-wider">Email</label>
+                            <input type="email" required class="w-full px-4 py-3 rounded-lg focus:border-cyan-400 transition-colors" placeholder="your@email.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 uppercase tracking-wider">Subject</label>
+                            <input type="text" required class="w-full px-4 py-3 rounded-lg focus:border-cyan-400 transition-colors" placeholder="Project Inquiry">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-2 uppercase tracking-wider">Message</label>
+                            <textarea rows="4" required class="w-full px-4 py-3 rounded-lg focus:border-cyan-400 transition-colors resize-none" placeholder="Tell me about your project..."></textarea>
+                        </div>
+                        <button type="submit" class="w-full btn-primary py-4 rounded-lg font-bold text-black uppercase tracking-wider hover:shadow-[0_0_30px_rgba(0,212,255,0.5)] transition-shadow">
+                            Send Request
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 border-t border-cyan-500/20 mt-12">
+        <div class="container mx-auto px-6 text-center text-gray-500">
+            <p class="orbitron text-cyan-400/50 text-sm tracking-widest">DESIGNED & BUILT BY ARWA IMRAN</p>
+            <p class="mt-2 text-xs">© 2024 All Rights Reserved</p>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js Background Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Create particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 1500;
+        const posArray = new Float32Array(particlesCount * 3);
+        const colorArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i += 3) {
+            posArray[i] = (Math.random() - 0.5) * 50;
+            posArray[i+1] = (Math.random() - 0.5) * 50;
+            posArray[i+2] = (Math.random() - 0.5) * 50;
+            
+            // Blue colors
+            colorArray[i] = 0;
+            colorArray[i+1] = 0.8 + Math.random() * 0.2;
+            colorArray[i+2] = 1;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        particlesGeometry.setAttribute('color', new THREE.BufferAttribute(colorArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.05,
+            vertexColors: true,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // Add wireframe sphere
+        const sphereGeometry = new THREE.IcosahedronGeometry(10, 2);
+        const sphereMaterial = new THREE.MeshBasicMaterial({
+            color: 0x00d4ff,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.1
+        });
+        const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        scene.add(sphere);
+
+        camera.position.z = 30;
+
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+            mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            particlesMesh.rotation.y += 0.001;
+            particlesMesh.rotation.x += 0.0005;
+            
+            sphere.rotation.y += 0.002;
+            sphere.rotation.x += 0.001;
+            
+            // Mouse parallax
+            particlesMesh.rotation.y += mouseX * 0.005;
+            particlesMesh.rotation.x += mouseY * 0.005;
+            
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // GSAP Animations
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Reveal animations
+        gsap.utils.toArray('.section-hidden').forEach(section => {
+            gsap.to(section, {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                ease: "power3.out",
+                scrollTrigger: {
+                    trigger: section,
+                    start: "top 80%",
+                    toggleActions: "play none none reverse"
+                }
+            });
+        });
+
+        // Animate skill bars
+        ScrollTrigger.create({
+            trigger: "#skills",
+            start: "top 60%",
+            onEnter: () => {
+                document.querySelectorAll('.skill-progress').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-width');
+                });
+            }
+        });
+
+        // Project cards
+        gsap.from(".project-card", {
+            scrollTrigger: {
+                trigger: "#projects",
+                start: "top 70%"
+            },
+            y: 50,
+            opacity: 0,
+            duration: 0.8,
+            stagger: 0.15,
+            ease: "power3.out"
+        });
+
+        // Custom Cursor
+        const cursorDot = document.getElementById('cursor-dot');
+        const cursorOutline = document.getElementById('cursor-outline');
+
+        document.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+            
+            cursorOutline.animate({
+                left: e.clientX + 'px',
+                top: e.clientY + 'px'
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        // Hover effects for cursor
+        document.querySelectorAll('a, button, .glass-panel, .tech-tag').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorOutline.style.transform = 'scale(1.5)';
+                cursorOutline.style.borderColor = '#64ffda';
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOutline.style.transform = 'scale(1)';
+                cursorOutline.style.borderColor = '#00d4ff';
+            });
+        });
+
+        // Form submission
+        document.getElementById('contactForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Create success notification
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-24 right-6 bg-cyan-500/20 border border-cyan-400 text-cyan-400 px-6 py-4 rounded-lg z-50 transform translate-x-full transition-transform duration-300';
+            notification.innerHTML = '✓ Message sent successfully!';
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.classList.remove('translate-x-full'), 100);
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+            
+            e.target.reset();
+        });
+
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Glitch effect on name hover
+        const nameElement = document.querySelector('h1');
+        const originalText = nameElement.innerHTML;
+        
+        nameElement.addEventListener('mouseenter', () => {
+            let iterations = 0;
+            const interval = setInterval(() => {
+                nameElement.innerHTML = originalText.split('').map((char, index) => {
+                    if(index < iterations) return originalText[index];
+                    if(char === ' ') return ' ';
+                    return String.fromCharCode(65 + Math.floor(Math.random() * 26));
+                }).join('');
+                
+                if(iterations >= originalText.length) clearInterval(interval);
+                iterations += 1/3;
+            }, 30);
+        });
+
+        nameElement.addEventListener('mouseleave', () => {
+            nameElement.innerHTML = originalText;
+        });
+    </script>
+</body>
+</html>
